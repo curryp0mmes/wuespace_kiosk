@@ -181,6 +181,42 @@ class _UserListScreenState extends State<UserListScreen> {
     );
   }
 
+  void showCheckmarkAndClose(BuildContext context, double newBal) {
+    // Show dialog
+    showDialog(
+      context: context,
+      barrierDismissible: false, // Prevents closing by tapping outside
+      builder: (context) {
+        return Dialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(10),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(20.0),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(
+                  Icons.check_circle,
+                  color: Colors.green,
+                  size: 60,
+                ),
+                const SizedBox(height: 10),
+                Text("Erfolg, neuer Stand: €${newBal.toStringAsFixed(2)}"),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+
+    // Close dialog after 2 seconds
+    Future.delayed(Duration(seconds: 2), () {
+      Navigator.of(context).pop(); // Close the dialog
+      Navigator.of(context).pop(); // Close the user list
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -188,7 +224,7 @@ class _UserListScreenState extends State<UserListScreen> {
         title: Text(widget.isForSelectingUser ? 'Käufer auswählen' : 'Schuldenliste'),
       ),
       body: isLoading
-          ? Center(child: CircularProgressIndicator())
+          ? const Center(child: CircularProgressIndicator())
           : ListView.builder(
               padding: const EdgeInsets.all(8.0),
               itemCount: users.length,
@@ -199,7 +235,7 @@ class _UserListScreenState extends State<UserListScreen> {
                     if (widget.isForSelectingUser && widget.selectedItem != null) {
                       // Add item price to user's balance
                       updateUserBalance(user, widget.selectedItem!.price);
-                      Navigator.of(context).pop();
+                      showCheckmarkAndClose(context, user.balance);
                     } else {
                       // Open balance adjustment dialog
                       openBalanceAdjustmentDialog(user);
@@ -210,7 +246,7 @@ class _UserListScreenState extends State<UserListScreen> {
                       title: Text(user.name,
                           style: TextStyle(fontWeight: FontWeight.bold)),
                       subtitle: Text(
-                          'Balance: €${user.balance.toStringAsFixed(2)}'),
+                          'Schulden: €${user.balance.toStringAsFixed(2)}'),
                     ),
                   ),
                 );
