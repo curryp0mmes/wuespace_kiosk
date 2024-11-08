@@ -185,7 +185,7 @@ class _UserListScreenState extends State<UserListScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.isForSelectingUser ? 'Select User' : 'User List'),
+        title: Text(widget.isForSelectingUser ? 'Käufer auswählen' : 'Schuldenliste'),
       ),
       body: isLoading
           ? Center(child: CircularProgressIndicator())

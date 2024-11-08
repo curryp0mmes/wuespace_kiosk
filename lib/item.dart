@@ -74,7 +74,7 @@ class _ItemListScreenState extends State<ItemListScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Available Items'),
+        title: Text('Verfügbare Produkte'),
       ),
       body: isLoading
           ? Center(child: CircularProgressIndicator(strokeWidth: 12,))
