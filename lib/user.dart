@@ -30,13 +30,13 @@ class UserListScreen extends StatefulWidget {
   final bool isForSelectingUser;
   final Item? selectedItem;
 
-  UserListScreen({required this.isForSelectingUser, this.selectedItem});
+  const UserListScreen({super.key, required this.isForSelectingUser, this.selectedItem});
 
   @override
-  _UserListScreenState createState() => _UserListScreenState();
+  UserListScreenState createState() => UserListScreenState();
 }
 
-class _UserListScreenState extends State<UserListScreen> {
+class UserListScreenState extends State<UserListScreen> {
   List<User> users = [];
   bool isLoading = true;
 
@@ -109,13 +109,13 @@ class _UserListScreenState extends State<UserListScreen> {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: Text('Add New User'),
+          title: const Text('Add New User'),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               TextField(
                 controller: nameController,
-                decoration: InputDecoration(labelText: 'Name'),
+                decoration: const InputDecoration(labelText: 'Name'),
               ),
             ],
           ),
@@ -124,7 +124,7 @@ class _UserListScreenState extends State<UserListScreen> {
               onPressed: () {
                 Navigator.of(context).pop();
               },
-              child: Text('Cancel'),
+              child: const Text('Cancel'),
             ),
             TextButton(
               onPressed: () {
@@ -135,7 +135,7 @@ class _UserListScreenState extends State<UserListScreen> {
                   Navigator.of(context).pop();
                 }
               },
-              child: Text('Add'),
+              child: const Text('Add'),
             ),
           ],
         );
@@ -151,18 +151,77 @@ class _UserListScreenState extends State<UserListScreen> {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: Text('Adjust Balance for ${user.name}'),
-          content: TextField(
-            controller: balanceController,
-            decoration: InputDecoration(labelText: 'New Balance (€)'),
-            keyboardType: TextInputType.number,
+          title: Text('Schulden von ${user.name} anpassen:'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: balanceController,
+                decoration: const InputDecoration(labelText: 'Neuer Schuldenwert (€)'),
+                keyboardType: TextInputType.number,
+              ),
+              const SizedBox(height: 10,),
+              Row(
+                children: [
+                  TextButton(
+                    onPressed: () {
+                      setState(() {
+                        balanceController.text = ((double.tryParse(balanceController.text) ?? 0.0) - 10).toStringAsFixed(2);
+                      });
+                    },
+                    child: const Text('-10€'),
+                  ),
+                  TextButton(
+                    onPressed: () {
+                      setState(() {
+                        balanceController.text = ((double.tryParse(balanceController.text) ?? 0.0) - 5).toStringAsFixed(2);
+                      });
+                    },
+                    child: const Text('-5€'),
+                  ),
+                  TextButton(
+                    onPressed: () {
+                      setState(() {
+                        balanceController.text = ((double.tryParse(balanceController.text) ?? 0.0) - 1).toStringAsFixed(2);
+                      });
+                    },
+                    child: const Text('-1€'),
+                  ),
+                  TextButton(
+                    onPressed: () {
+                      setState(() {
+                        balanceController.text = ((double.tryParse(balanceController.text) ?? 0.0) - 0.5).toStringAsFixed(2);
+                      });
+                    },
+                    child: const Text('-50ct'),
+                  ),
+                  TextButton(
+                    onPressed: () {
+                      setState(() {
+                        balanceController.text = ((double.tryParse(balanceController.text) ?? 0.0) - 0.1).toStringAsFixed(2);
+                      });
+                    },
+                    child: const Text('-10ct'),
+                  ),
+                ],
+              )
+            ],
           ),
           actions: [
             TextButton(
               onPressed: () {
+                setState(() {
+                  balanceController.text = "0.00";
+                });
+              },
+              child: const Text('Auf 0 setzen'),
+            ),
+            TextButton(
+              onPressed: () {
                 Navigator.of(context).pop();
               },
-              child: Text('Cancel'),
+              style: const ButtonStyle(foregroundColor: WidgetStatePropertyAll(Colors.red)),
+              child: const Text('Cancel'),
             ),
             TextButton(
               onPressed: () {
@@ -173,7 +232,8 @@ class _UserListScreenState extends State<UserListScreen> {
                 saveUsers();
                 Navigator.of(context).pop();
               },
-              child: Text('Save'),
+              style: const ButtonStyle(foregroundColor: WidgetStatePropertyAll(Colors.green)),
+              child: const Text('Save'),
             ),
           ],
         );
@@ -211,7 +271,7 @@ class _UserListScreenState extends State<UserListScreen> {
     );
 
     // Close dialog after 2 seconds
-    Future.delayed(Duration(seconds: 2), () {
+    Future.delayed(const Duration(seconds: 2), () {
       Navigator.of(context).pop(); // Close the dialog
       Navigator.of(context).pop(); // Close the user list
     });
@@ -244,7 +304,7 @@ class _UserListScreenState extends State<UserListScreen> {
                   child: Card(
                     child: ListTile(
                       title: Text(user.name,
-                          style: TextStyle(fontWeight: FontWeight.bold)),
+                          style: const TextStyle(fontWeight: FontWeight.bold)),
                       subtitle: Text(
                           'Schulden: €${user.balance.toStringAsFixed(2)}'),
                     ),
@@ -254,8 +314,8 @@ class _UserListScreenState extends State<UserListScreen> {
             ),
       floatingActionButton: FloatingActionButton(
               onPressed: () => showAddUserDialog(context),
-              child: Icon(Icons.add),
-              tooltip: 'Add User',
+              tooltip: 'Person hinzufügen',
+              child: const Icon(Icons.add),
             ),
     );
   }

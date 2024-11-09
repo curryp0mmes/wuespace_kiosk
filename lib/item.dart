@@ -29,11 +29,13 @@ class Item {
 }
 
 class ItemListScreen extends StatefulWidget {
+  const ItemListScreen({super.key});
+
   @override
-  _ItemListScreenState createState() => _ItemListScreenState();
+  ItemListScreenState createState() => ItemListScreenState();
 }
 
-class _ItemListScreenState extends State<ItemListScreen> {
+class ItemListScreenState extends State<ItemListScreen> {
   List<Item> items = [];
   bool isLoading = true;
 
@@ -74,10 +76,10 @@ class _ItemListScreenState extends State<ItemListScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Verfügbare Produkte'),
+        title: const Text('Verfügbare Produkte'),
       ),
       body: isLoading
-          ? Center(child: CircularProgressIndicator(strokeWidth: 12,))
+          ? const Center(child: CircularProgressIndicator(strokeWidth: 12,))
           : Padding(
               padding: const EdgeInsets.all(8.0),
               child: GridView.builder(
@@ -106,7 +108,7 @@ class _ItemListScreenState extends State<ItemListScreen> {
                             color: Colors.grey.withOpacity(0.5),
                             spreadRadius: 2,
                             blurRadius: 5,
-                            offset: Offset(0, 3),
+                            offset: const Offset(0, 3),
                           ),
                         ],
                       ),
@@ -128,12 +130,12 @@ class _ItemListScreenState extends State<ItemListScreen> {
                               children: [
                                 Text(
                                   item.name,
-                                  style: TextStyle(
+                                  style: const TextStyle(
                                     fontSize: 16,
                                     fontWeight: FontWeight.bold,
                                   ),
                                 ),
-                                SizedBox(height: 4),
+                                const SizedBox(height: 4),
                                 Text(
                                   '€${item.price.toStringAsFixed(2)}',
                                   style: TextStyle(

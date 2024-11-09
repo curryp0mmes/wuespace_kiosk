@@ -3,13 +3,15 @@ import 'package:wuespace_kiosk/user.dart';
 import 'package:wuespace_kiosk/item.dart';
 
 void main() {
-  runApp(MyApp());
+  runApp(const MyApp());
 }
 
 class MyApp extends StatelessWidget {
+  const MyApp({super.key});
+
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
+    return const MaterialApp(
       debugShowCheckedModeBanner: false,
       home: MainScreen(),
     );
@@ -18,6 +20,8 @@ class MyApp extends StatelessWidget {
 
 
 class MainScreen extends StatefulWidget {
+  const MainScreen({super.key});
+
   @override
   MainScreenState createState() => MainScreenState();
 }
@@ -29,8 +33,8 @@ class MainScreenState extends State<MainScreen> {
   final List<Widget> _screens;
 
   MainScreenState() : _screens = [
-    ItemListScreen(),
-    UserListScreen(isForSelectingUser: false),
+    const ItemListScreen(),
+    const UserListScreen(isForSelectingUser: false),
   ];
 
   void _onItemTapped(int index) {
