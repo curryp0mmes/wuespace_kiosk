@@ -1,3 +1,5 @@
+# Moved to Wuespace [kiosk](https://github.com/wuespace/kiosk)
+
 # wuespace_kiosk
 
 Buying drinks has never been simpler.
