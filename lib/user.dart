@@ -7,12 +7,14 @@ import 'package:wuespace_kiosk/item.dart';
 
 class User {
   final String name;
-  double balance;
+  int balance;
+  int id;
 
-  User({required this.name, required this.balance});
+  User({required this.id, required this.name, required this.balance});
 
   factory User.fromJson(Map<String, dynamic> json) {
     return User(
+      id: json['id'],
       name: json['name'],
       balance: json['balance'],
     );
@@ -20,6 +22,7 @@ class User {
 
   Map<String, dynamic> toJson() {
     return {
+      'id': id,
       'name': name,
       'balance': balance,
     };
@@ -38,6 +41,7 @@ class UserListScreen extends StatefulWidget {
 
 class UserListScreenState extends State<UserListScreen> {
   List<User> users = [];
+  int maxId = 0;
   bool isLoading = true;
 
   @override
@@ -46,19 +50,30 @@ class UserListScreenState extends State<UserListScreen> {
     loadUsers();
   }
 
+  String renderPrice(int price, {bool euroSign = true}) {
+    int euros = (price / 100).truncate();
+    int cents = price % 100;
+    
+
+    return "${euros},${cents<10?'0':''}${cents}${euroSign?'€':''}";
+  }
+
   Future<void> loadUsers() async {
     try {
       final directory = await getApplicationDocumentsDirectory();
-      final filePath = '${directory.path}/kiosk/user.json';
+      final filePath = '${directory.path}/wuespace_kiosk/user.json';
       final file = File(filePath);
 
       
       if (await file.exists()) {
         final contents = await file.readAsString();
 
-        final jsonData = jsonDecode(contents) as List;
+        final jsonData = jsonDecode(contents) as Map<String, dynamic>;
+
+        maxId = jsonData['max_id'];
+        List userJsonList = jsonData['users'] as List;
         setState(() {
-          users = jsonData.map((json) => User.fromJson(json)).toList();
+          users = userJsonList.map((json) => User.fromJson(json)).toList();
           isLoading = false;
         });
       } else {
@@ -78,24 +93,27 @@ class UserListScreenState extends State<UserListScreen> {
   Future<void> saveUsers() async {
     try {
       final directory = await getApplicationDocumentsDirectory();
-      final filePath = '${directory.path}/kiosk/user.json';
+      final filePath = '${directory.path}/wuespace_kiosk/user.json';
       final file = File(filePath);
-      final jsonData = jsonEncode(users.map((user) => user.toJson()).toList());
-      await file.writeAsString(jsonData);
+      final jsonUserData = users.map((user) => user.toJson()).toList();
+      final Map<String, dynamic> jsonData = Map();
+      jsonData['users'] = jsonUserData;
+      jsonData['max_id'] = maxId;
+      await file.writeAsString(jsonEncode(jsonData));
       print('User data saved');
     } catch (e) {
       print('Failed to save user data: $e');
     }
   }
 
-  void addUser(String name, double balance) {
+  void addUser(String name, int balance) {
     setState(() {
-      users.add(User(name: name, balance: balance));
+      users.add(User(id: ++maxId, name: name, balance: balance));
     });
     saveUsers();
   }
 
-  void updateUserBalance(User user, double amount) {
+  void updateUserBalance(User user, int amount) {
     setState(() {
       user.balance += amount;
     });
@@ -129,7 +147,7 @@ class UserListScreenState extends State<UserListScreen> {
             TextButton(
               onPressed: () {
                 final name = nameController.text;
-                const balance = 0.0;
+                const balance = 0;
                 if (name.isNotEmpty) {
                   addUser(name, balance);
                   Navigator.of(context).pop();
@@ -145,7 +163,7 @@ class UserListScreenState extends State<UserListScreen> {
 
   void openBalanceAdjustmentDialog(User user) {
     final TextEditingController balanceController =
-        TextEditingController(text: user.balance.toStringAsFixed(2));
+        TextEditingController(text: renderPrice(user.balance, euroSign: false));
 
     showDialog(
       context: context,
@@ -225,9 +243,10 @@ class UserListScreenState extends State<UserListScreen> {
             ),
             TextButton(
               onPressed: () {
-                final newBalance = double.tryParse(balanceController.text) ?? 0.0;
+                final parsedBal = double.tryParse(balanceController.text) ?? 0.0;
+                int newBal = (parsedBal * 100) as int;
                 setState(() {
-                  user.balance = newBalance;
+                  user.balance = newBal;
                 });
                 saveUsers();
                 Navigator.of(context).pop();
@@ -241,7 +260,30 @@ class UserListScreenState extends State<UserListScreen> {
     );
   }
 
-  void showCheckmarkAndClose(BuildContext context, double newBal) {
+  Future<bool> showConfirmationDialog(User user, BuildContext context) async {
+  return await showDialog<bool>(
+    context: context,
+    barrierDismissible: false,
+    builder: (context) {
+      return AlertDialog(
+        title: const Text('Kauf bestätigen'),
+        content: Text('Kauf für ${user.name} Bestätigen?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false), // Return false on cancel
+            child: const Text('Abbrechen', style: TextStyle(color: Colors.red),),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(true), // Return true on confirm
+            child: const Text('Bestätigen', style: TextStyle(color: Colors.green),),
+          ),
+        ],
+      );
+    },
+  ) ?? false; // Default to false if dialog is dismissed
+}
+
+  void showCheckmarkAndClose(BuildContext context, int newBal) {
     // Show dialog
     showDialog(
       context: context,
@@ -262,7 +304,7 @@ class UserListScreenState extends State<UserListScreen> {
                   size: 60,
                 ),
                 const SizedBox(height: 10),
-                Text("Erfolg, neuer Stand: €${newBal.toStringAsFixed(2)}"),
+                Text("Erfolg, neuer Stand: ${renderPrice(newBal)}"),
               ],
             ),
           ),
@@ -275,6 +317,34 @@ class UserListScreenState extends State<UserListScreen> {
       Navigator.of(context).pop(); // Close the dialog
       Navigator.of(context).pop(); // Close the user list
     });
+  }
+
+  Future<void> addTransaction(User user, Item item) async {
+    try {
+      final directory = await getApplicationDocumentsDirectory();
+      final filePath = '${directory.path}/wuespace_kiosk/transactions.json';
+      final file = File(filePath);
+
+      List jsonData = <dynamic>[];
+
+      if (await file.exists()) {
+        final contents = await file.readAsString();
+        jsonData.addAll(jsonDecode(contents) as List); 
+      } else {
+        print('Transaction File not found at: $filePath');
+      }
+      Map<String, dynamic> transaction = Map();
+
+      transaction['user'] = user;
+      transaction['item'] = item;
+      jsonData.add(transaction);
+
+      await file.writeAsString(jsonEncode(jsonData));
+      
+      print('Transaction data saved');
+    } catch (e) {
+      print('Failed to add transaction: $e');
+    }
   }
 
   @override
@@ -291,10 +361,13 @@ class UserListScreenState extends State<UserListScreen> {
               itemBuilder: (context, index) {
                 final user = users[index];
                 return GestureDetector(
-                  onTap: () {
+                  onTap: () async {
                     if (widget.isForSelectingUser && widget.selectedItem != null) {
+
+                      if(!await showConfirmationDialog(user, context)) return;
                       // Add item price to user's balance
                       updateUserBalance(user, widget.selectedItem!.price);
+                      addTransaction(user, widget.selectedItem!);
                       showCheckmarkAndClose(context, user.balance);
                     } else {
                       // Open balance adjustment dialog
@@ -303,10 +376,19 @@ class UserListScreenState extends State<UserListScreen> {
                   },
                   child: Card(
                     child: ListTile(
-                      title: Text(user.name,
+                      title: Row(children: [
+                          Text(user.name,
                           style: const TextStyle(fontWeight: FontWeight.bold)),
-                      subtitle: Text(
-                          'Schulden: €${user.balance.toStringAsFixed(2)}'),
+                          Spacer(),
+                          Text(
+                            user.balance < 0 ? 
+                              'Guthaben: ${renderPrice(-1 * user.balance)}':
+                              'Schulden: ${renderPrice(user.balance)}',
+                            style: TextStyle(color: user.balance <= 0 ? Colors.green : Colors.red),
+                          ),
+                      ],),
+                      trailing: Icon(user.balance < 0 ? Icons.add : user.balance == 0 ? Icons.check : Icons.remove),
+                      dense: true,
                     ),
                   ),
                 );

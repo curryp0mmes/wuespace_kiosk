@@ -29,7 +29,19 @@ And a json file named user.json in Documents/kiosk/user.json
 
 ```
 
-A new Flutter project.
+To build for pi do the following:
+
+Get flutterpi and flutterpi tool
+
+flutter pub global activate flutterpi_tool
+export PATH="$PATH":"$HOME/.pub-cache/bin"
+flutterpi_tool build --arch=arm64 --cpu=pi3 --release
+rsync -a ./build/flutter_assets/ user@host:/home/user/wuespace_kiosk/
+
+Then on the pi do
+
+flutter-pi --release ./wuespace_kiosk/
+
 
 ## Getting Started
 
